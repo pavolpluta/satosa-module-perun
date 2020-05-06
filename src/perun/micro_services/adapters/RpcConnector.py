@@ -48,9 +48,9 @@ class RpcConnector:
         c.setopt(pycurl.CONNECTTIMEOUT, self.CONNECT_TIMEOUT)
         c.setopt(pycurl.TIMEOUT, self.TIMEOUT)
 
-        start_time = self.__millitime()
+        start_time = self.__microtime()
         c.perform()
-        end_time = self.__millitime()
+        end_time = self.__microtime()
         c.close()
 
         body = buffer.getvalue()
@@ -58,11 +58,11 @@ class RpcConnector:
         result = json.loads(result_json)
 
         if 'errorId' in result.keys():
-            raise Exception(f'Exception from Perun: {result["message"]}')
+            raise Exception(f"Exception from Perun: {result['message']}")
 
         response_time = round(end_time - start_time, 3)
         logger.debug(
-            f'GET call {uri} with params: {params_query}, response: {result} in: {response_time} ms.'
+            f'GET call {uri} with params: {params_query}, response: {json} in: {response_time} s.'
         )
 
         return result
@@ -85,9 +85,9 @@ class RpcConnector:
         c.setopt(pycurl.CONNECTTIMEOUT, self.CONNECT_TIMEOUT)
         c.setopt(pycurl.TIMEOUT, self.TIMEOUT)
 
-        start_time = self.__millitime()
+        start_time = self.__microtime()
         c.perform()
-        end_time = self.__millitime()
+        end_time = self.__microtime()
         c.close()
 
         body = buffer.getvalue()
@@ -98,14 +98,15 @@ class RpcConnector:
         result = json.loads(result_json)
 
         if 'errorId' in result.keys():
-            raise Exception(f'Exception from Perun: {result["message"]}')
+            raise Exception(f"Exception from Perun: {result['message']}")
 
         response_time = round(end_time - start_time, 3)
         logger.debug(
-            f'POST call {uri} with params: {params_json}, response: {result} in: {response_time} ms.')
+            f'POST call {uri} with params: {params_json}, response: {result} in: {response_time} s')
 
         return result
 
+    # '__' at the beginning states that it is a private method
     @staticmethod
-    def __millitime():
-        return time.time_ns() // 1000000
+    def __microtime():
+        return int(round(time.time() * 1000))
