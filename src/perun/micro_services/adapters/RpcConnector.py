@@ -24,7 +24,7 @@ class RpcConnector:
     CONNECT_TIMEOUT = 1
     TIMEOUT = 15
 
-    def __init__(self, rpc_url='', user='', password=''):
+    def __init__(self, rpc_url, user, password):
         self.rpc_url = rpc_url
         self.user = user
         self.passwd = password
@@ -102,7 +102,7 @@ class RpcConnector:
 
         response_time = round(end_time - start_time, 3)
         logger.debug(
-            f'POST call {uri} with params: {params_json}, response: {result} in: {response_time} ms')
+            f'POST call {uri} with params: {params_json}, response: {result} in: {response_time} ms.')
 
         return result
 
