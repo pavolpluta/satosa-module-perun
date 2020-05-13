@@ -5,8 +5,8 @@ __author__ = "Pavel Vyskocil"
 __email__ = "Pavel.Vyskocil@cesnet.cz"
 
 import json
-import time
 import logging
+from ..utils import milli_time
 
 from ldap3 import Server, Connection, ServerPool, FIRST
 
@@ -58,12 +58,12 @@ class LdapConnector:
         if conn.bind() is False:
             raise Exception(f'Unable to bind user to the Perun LDAP {repr(server_pool.get_current_server(conn))}.')
 
-        start_time = time.time()
+        start_time = milli_time()
         conn.search(base, filter, attributes=attributes)
-        end_time = time.time()
+        end_time = milli_time()
 
-        response = self.get_simplefied_entries(conn.entries)
-        response_time = round((end_time - start_time) * 1000)
+        response = self.get_simplified_entries(conn.entries)
+        response_time = end_time - start_time
         logger.debug(
             f'LdapConnector.search - search query proceeded in {response_time} ms. '
             f'Query base: {base}, filter: {filter}, response: {response}.'
@@ -72,7 +72,7 @@ class LdapConnector:
         return response
 
     @staticmethod
-    def get_simplefied_entries(entries):
+    def get_simplified_entries(entries):
         data = []
         for entry in entries:
             entry_dict = json.loads(entry.entry_to_json())['attributes']

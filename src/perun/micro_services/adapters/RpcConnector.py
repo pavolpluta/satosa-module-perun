@@ -9,10 +9,10 @@ __email__ = "vyskocilpavel@muni.cz, pavol.pluta1@gmail.com"
 
 import json
 import logging
-import time
 import urllib.parse
 import re
 import pycurl
+from ..utils import milli_time
 
 from io import BytesIO
 
@@ -48,9 +48,9 @@ class RpcConnector:
         c.setopt(pycurl.CONNECTTIMEOUT, self.CONNECT_TIMEOUT)
         c.setopt(pycurl.TIMEOUT, self.TIMEOUT)
 
-        start_time = self.__microtime()
+        start_time = milli_time()
         c.perform()
-        end_time = self.__microtime()
+        end_time = milli_time()
         c.close()
 
         body = buffer.getvalue()
@@ -58,11 +58,11 @@ class RpcConnector:
         result = json.loads(result_json)
 
         if 'errorId' in result.keys():
-            raise Exception(f"Exception from Perun: {result['message']}")
+            raise Exception(f'Exception from Perun: {result["message"]}')
 
-        response_time = round(end_time - start_time, 3)
+        response_time = end_time - start_time
         logger.debug(
-            f'GET call {uri} with params: {params_query}, response: {json} in: {response_time} s.'
+            f'GET call {uri} with params: {params_query}, response: {result} in: {response_time} ms.'
         )
 
         return result
@@ -85,9 +85,9 @@ class RpcConnector:
         c.setopt(pycurl.CONNECTTIMEOUT, self.CONNECT_TIMEOUT)
         c.setopt(pycurl.TIMEOUT, self.TIMEOUT)
 
-        start_time = self.__microtime()
+        start_time = milli_time()
         c.perform()
-        end_time = self.__microtime()
+        end_time = milli_time()
         c.close()
 
         body = buffer.getvalue()
@@ -98,15 +98,10 @@ class RpcConnector:
         result = json.loads(result_json)
 
         if 'errorId' in result.keys():
-            raise Exception(f"Exception from Perun: {result['message']}")
+            raise Exception(f'Exception from Perun: {result["message"]}')
 
-        response_time = round(end_time - start_time, 3)
+        response_time = end_time - start_time
         logger.debug(
-            f'POST call {uri} with params: {params_json}, response: {result} in: {response_time} s')
+            f'POST call {uri} with params: {params_json}, response: {result} in: {response_time} ms.')
 
         return result
-
-    # '__' at the beginning states that it is a private method
-    @staticmethod
-    def __microtime():
-        return int(round(time.time() * 1000))
