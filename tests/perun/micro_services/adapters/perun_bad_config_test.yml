@@ -1,0 +1,6 @@
+ldap.hostnames:
+  - ldaps://hostname.com
+ldap.user: 'user'
+
+rpc.hostname: 'hostname'
+rpc.user: 'user'

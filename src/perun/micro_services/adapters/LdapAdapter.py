@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class LdapAdapter(PerunAdapterAbstract):
 
-    PERUN_LDAP_HOSTNAME = 'ldap.hostname'
+    PERUN_LDAP_HOSTNAMES = 'ldap.hostnames'
     PERUN_LDAP_BASE = 'ldap.base'
     PERUN_LDAP_USER = 'ldap.user'
     PERUN_LDAP_PASSWORD = 'ldap.password'
@@ -24,12 +24,12 @@ class LdapAdapter(PerunAdapterAbstract):
 
         with open(config_file, "r") as f:
             perun_configuration = yaml.safe_load(f)
-            hostname = perun_configuration.get(self.PERUN_LDAP_HOSTNAME, None)
+            hostnames = perun_configuration.get(self.PERUN_LDAP_HOSTNAMES, None)
             user = perun_configuration.get(self.PERUN_LDAP_USER, None)
             pasword = perun_configuration.get(self.PERUN_LDAP_PASSWORD, None)
             self.base = perun_configuration.get(self.PERUN_LDAP_BASE, None)
 
-        if None in [hostname, user, pasword, self.base]:
+        if None in [hostnames, user, pasword, self.base]:
             raise Exception('One of required attributes is not defined!')
 
-        self.connector = LdapConnector(hostname, user, pasword)
+        self.connector = LdapConnector(hostnames, user, pasword)

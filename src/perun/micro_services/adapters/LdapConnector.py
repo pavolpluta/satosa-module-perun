@@ -8,15 +8,15 @@ import json
 import time
 import logging
 
-from ldap3 import Server, Connection
+from ldap3 import Server, Connection, ServerPool, FIRST
 
 logger = logging.getLogger(__name__)
 
 
 class LdapConnector:
 
-    def __init__(self, hostname, user, password):
-        self.hostname = hostname
+    def __init__(self, hostnames, user, password):
+        self.hostnames = hostnames
         self.user = user
         self.password = password
 
@@ -46,11 +46,17 @@ class LdapConnector:
         if attributes is None:
             attributes = []
 
-        server = Server(self.hostname)
-        conn = Connection(server, user=self.user, password=self.password)
+        server_pool = ServerPool(None, FIRST)
+
+        for hostname in self.hostnames:
+            server = Server(hostname)
+            server_pool.add(server)
+
+        conn = Connection(server_pool, user=self.user, password=self.password)
         conn.open()
+
         if conn.bind() is False:
-            raise Exception('Unable to user to the Perun LDAP {}'.format(self.hostname))
+            raise Exception(f'Unable to bind user to the Perun LDAP {repr(server_pool.get_current_server(conn))}.')
 
         start_time = time.time()
         conn.search(base, filter, attributes=attributes)
