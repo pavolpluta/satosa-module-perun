@@ -12,6 +12,16 @@ class PerunAdapterAbstract(ABC):
     LDAP = 'ldap'
     RPC = 'rpc'
 
+    @staticmethod
+    def get_instance(config_file_path, interface=RPC):
+        if interface == PerunAdapterAbstract.LDAP:
+            from perun.micro_services.adapters.LdapAdapter import LdapAdapter
+            adapter = LdapAdapter(config_file_path)
+        else:
+            from perun.micro_services.adapters.RpcAdapter import RpcAdapter
+            adapter = RpcAdapter(config_file_path)
+        return adapter
+
     @abstractmethod
     def get_perun_user(self, idp_entity_id, uids):
         pass

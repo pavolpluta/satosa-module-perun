@@ -9,7 +9,6 @@ import logging
 import urllib
 from typing import List
 
-from perun.micro_services.adapters.PerunAdapter import PerunAdapter
 from perun.micro_services.adapters.PerunAdapterAbstract import PerunAdapterAbstract
 from perun.micro_services.models.Facility import Facility
 from perun.micro_services.models.Group import Group
@@ -38,7 +37,7 @@ class PerunEntitlement(ResponseMicroService):
         if confif_file_name is None:
             raise Exception(f'PerunEntitlement: Required option "{self.PERUN_CONFIG_FILE_NAME}" not defined.')
 
-        self.adapter: PerunAdapterAbstract = PerunAdapter.get_instance(confif_file_name, interface)
+        self.adapter: PerunAdapterAbstract = PerunAdapterAbstract.get_instance(confif_file_name, interface)
 
         self.prefix = config.get(self.PREFIX, None)
         self.suffix = config.get(self.SUFFIX, None)
