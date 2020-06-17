@@ -43,5 +43,9 @@ class PerunAdapterAbstract(ABC):
         pass
 
     @abstractmethod
-    def get_user_attributes_values(self, user_id, attributes):
+    def get_user_attributes(self, user_id, attr_names):
+        pass
+
+    @abstractmethod
+    def get_user_attributes_values(self,user_id, attributes):
         pass

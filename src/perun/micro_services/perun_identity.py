@@ -7,7 +7,6 @@ __email__ = "Pavel.Vyskocil@cesnet.cz"
 
 import logging
 
-from perun.micro_services.adapters.PerunAdapter import PerunAdapter
 from perun.micro_services.adapters.PerunAdapterAbstract import PerunAdapterAbstract
 from satosa.micro_services.base import ResponseMicroService
 
@@ -27,13 +26,13 @@ class PerunIdentity(ResponseMicroService):
         self.config = config
 
         self.uids_identifiers = config.get(self.UIDS_IDENTIFIERS, [])
-        confif_file_name = config.get(self.PERUN_CONFIG_FILE_NAME, None)
+        config_file_name = config.get(self.PERUN_CONFIG_FILE_NAME, None)
 
-        if confif_file_name is None:
+        if config_file_name is None:
             raise Exception(f'PerunIdentity: Required option "{self.PERUN_CONFIG_FILE_NAME}" not defined.')
 
         interface = str.lower(config.get(self.INTERFACE))
-        self.adapter: PerunAdapterAbstract = PerunAdapter.get_instance(confif_file_name, interface)
+        self.adapter: PerunAdapterAbstract = PerunAdapterAbstract.get_instance(config_file_name, interface)
 
     def process(self, context, data):
         """

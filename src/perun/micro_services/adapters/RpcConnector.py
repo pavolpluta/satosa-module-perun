@@ -11,13 +11,14 @@ import json
 import logging
 import urllib.parse
 import re
+from pprint import pprint
+
 import pycurl
-from ..utils import milli_time
+from perun.micro_services.utils.millitime import milli_time
 
 from io import BytesIO
 
 logger = logging.getLogger(__name__)
-
 
 class RpcConnector:
     COOKIE_FILE = '/tmp/proxyidp_cookie.txt'
@@ -33,8 +34,14 @@ class RpcConnector:
         if params is None:
             params = []
 
-        params_query = urllib.parse.urlencode(params)
+        logger.debug("RPC PARAMS")
+        logger.debug(pprint(params))
+
+        params_query = urllib.parse.urlencode(params, doseq= True)
         params_query = re.sub(r'%5B\d+%5D', '%5B%5D', params_query)
+
+        logger.debug("RPC PARAMS QUERY")
+        logger.debug(pprint(params_query))
 
         uri = f'{self.rpc_url}json/{manager}/{method}'
 
@@ -57,7 +64,7 @@ class RpcConnector:
         result_json = body.decode('utf-8')
         result = json.loads(result_json)
 
-        if 'errorId' in result.keys():
+        if isinstance(result, dict) and 'errorId' in result.keys():
             raise Exception(f'Exception from Perun: {result["message"]}')
 
         response_time = end_time - start_time
@@ -97,7 +104,7 @@ class RpcConnector:
         result_json = body.decode('utf-8')
         result = json.loads(result_json)
 
-        if 'errorId' in result.keys():
+        if isinstance(result, dict) and 'errorId' in result.keys():
             raise Exception(f'Exception from Perun: {result["message"]}')
 
         response_time = end_time - start_time

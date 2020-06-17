@@ -1,9 +1,11 @@
 import logging
+from pprint import pprint
 
 import yaml
 from perun.micro_services.adapters.PerunAdapterAbstract import PerunAdapterAbstract
 from perun.micro_services.adapters.RpcConnector import RpcConnector
 from perun.micro_services.models.User import User
+from perun.micro_services.utils.attribute_utils import AttributeUtils
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +20,10 @@ class RpcAdapter(PerunAdapterAbstract):
 
     connector = None
 
-    def __init__(self, config_file):
+    def __init__(self, config_file = None):
+
+        if config_file is None:
+            config_file = self.PERUN_CONFIG_FILE_NAME
 
         with open(config_file, "r") as f:
             perun_configuration = yaml.safe_load(f)
@@ -69,5 +74,48 @@ class RpcAdapter(PerunAdapterAbstract):
     def get_resource_capabilities(self, facility_id, groups):
         pass
 
-    def get_user_attributes_values(self, user_id, attributes):
-        pass
+    # TODO test
+    def get_user_attributes(self, user_id, attr_names):
+
+        attr_names_map = AttributeUtils.get_rpc_attr_names(attr_names)
+
+        logger.debug("RPC MAP:")
+        logger.debug(pprint(attr_names_map))
+        logger.debug("RPC MAP KEYS:")
+        logger.debug(pprint([*attr_names_map]))
+
+        perun_attrs = self.connector.get('attributesManager', 'getAttributes', {
+            'user': user_id,
+            'attrNames': [*attr_names_map],
+        }
+        )
+
+        return self.__get_attributes(perun_attrs,attr_names_map)
+
+    # TODO test
+    def get_user_attributes_values(self,user_id, attributes):
+        perun_attrs = self.get_user_attributes(user_id,attributes)
+        attributes_values = {}
+
+        for perun_attr_name, perun_attr in perun_attrs.items():
+            attributes_values[perun_attr_name] = perun_attr['value']
+
+        return attributes_values
+
+    # TODO test
+    def __get_attributes(self, perun_attrs,attr_names_map):
+
+        attributes = {}
+
+        for perun_attr in perun_attrs:
+            perun_attr_name = perun_attr['namespace'] + ':' + perun_attr['friendlyName']
+
+            attributes[attr_names_map[perun_attr_name]] = {
+                'id': perun_attr['id'],
+                'name': perun_attr_name,
+                'displayName': perun_attr['displayName'],
+                'type': perun_attr['type'],
+                'value': perun_attr['value']
+            }
+
+        return attributes

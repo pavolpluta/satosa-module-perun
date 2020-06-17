@@ -8,10 +8,12 @@ import logging
 
 import yaml
 from perun.micro_services.adapters.LdapConnector import LdapConnector
+from perun.micro_services.adapters.RpcAdapter import RpcAdapter
 from perun.micro_services.adapters.PerunAdapterAbstract import PerunAdapterAbstract
 from perun.micro_services.models.Facility import Facility
 from perun.micro_services.models.Group import Group
 from perun.micro_services.models.User import User
+from perun.micro_services.utils.attribute_utils import AttributeUtils
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +24,8 @@ class LdapAdapter(PerunAdapterAbstract):
     PERUN_LDAP_BASE = 'ldap.base'
     PERUN_LDAP_USER = 'ldap.user'
     PERUN_LDAP_PASSWORD = 'ldap.password'
+
+    INTERNAL_ATTR_NAME = 'internalAttrName'
 
     def __init__(self, config_file):
 
@@ -36,6 +40,7 @@ class LdapAdapter(PerunAdapterAbstract):
             raise Exception('One of required attributes is not defined!')
 
         self.connector = LdapConnector(hostnames, user, pasword)
+        self.fallback_adapter = RpcAdapter(config_file)
 
     def get_perun_user(self, idp_entity_id, uids):
 
@@ -98,6 +103,9 @@ class LdapAdapter(PerunAdapterAbstract):
                 '(&(uniqueMember=perunUserId=' + user_id + ', ou=People,' + self.base + ')' + resources_string + ')',
                 ['perunGroupId', 'cn', 'perunUniqueGroupName', 'perunVoId', 'description']
             )
+
+        if groups_result is None:
+            groups_result = []
 
         groups = []
 
@@ -165,14 +173,32 @@ class LdapAdapter(PerunAdapterAbstract):
 
         return set(response['capabilities'])
 
-    def get_user_attributes_values(self, user_id, attributes=None):
-        if attributes is None:
+    def get_user_attributes(self, user_id, attr_names=None):
+        if attr_names is None:
             return dict()
 
         ldap_response = self.connector.search_for_entity(
             f'perunUserId={user_id},ou=People,{self.base}',
             '(objectClass=perunUser)',
-            attributes
+            attr_names
         )
 
         return ldap_response
+
+    # TODO test
+    def get_user_attributes_values(self,user_id, attributes):
+        attr_type_map = AttributeUtils.create_ldap_attr_name_type_map(attributes)
+
+        perun_attrs = self.connector.search_for_entities(
+            self.base,
+            f'(&(objectClass=perunUser)(perunUserId={user_id}))',
+            attr_type_map.keys()
+        )
+
+        attributes_values = {}
+
+        for attr_name in attr_type_map.keys():
+            attributes_values[attr_type_map[attr_name][self.INTERNAL_ATTR_NAME]] = \
+                AttributeUtils.set_attr_value(attr_type_map,perun_attrs[0], attr_name)
+
+        return attributes_values

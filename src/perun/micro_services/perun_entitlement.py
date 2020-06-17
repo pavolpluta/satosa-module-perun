@@ -32,12 +32,12 @@ class PerunEntitlement(ResponseMicroService):
         self.config = config
 
         interface = str.lower(config.get(self.INTERFACE))
-        confif_file_name = config.get(self.PERUN_CONFIG_FILE_NAME, None)
+        config_file_name = config.get(self.PERUN_CONFIG_FILE_NAME, None)
 
-        if confif_file_name is None:
+        if config_file_name is None:
             raise Exception(f'PerunEntitlement: Required option "{self.PERUN_CONFIG_FILE_NAME}" not defined.')
 
-        self.adapter: PerunAdapterAbstract = PerunAdapterAbstract.get_instance(confif_file_name, interface)
+        self.adapter: PerunAdapterAbstract = PerunAdapterAbstract.get_instance(config_file_name, interface)
 
         self.prefix = config.get(self.PREFIX, None)
         self.suffix = config.get(self.SUFFIX, None)
@@ -101,7 +101,7 @@ class PerunEntitlement(ResponseMicroService):
         forwarded_entitlements = set()
 
         try:
-            response = self.adapter.get_user_attributes_values(user_id, [self.forwarded_entitlement_attr_name])
+            response = self.adapter.get_user_attributes(user_id, [self.forwarded_entitlement_attr_name])
             forwarded_entitlements = response.get(self.forwarded_entitlement_attr_name, set())
         except Exception:
             logger.error('Exception during get forwarded entitlements')

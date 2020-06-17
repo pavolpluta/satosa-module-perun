@@ -6,7 +6,7 @@ __email__ = "Pavel.Vyskocil@cesnet.cz"
 
 import json
 import logging
-from ..utils import milli_time
+from perun.micro_services.utils.millitime import milli_time
 
 from ldap3 import Server, Connection, ServerPool, FIRST
 

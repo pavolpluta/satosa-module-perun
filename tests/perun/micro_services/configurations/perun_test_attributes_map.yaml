@@ -1,0 +1,19 @@
+---
+# USER ATTRIBUTES
+our_test_attribute_1:
+  rpc: urn:attr:1
+  ldap: attr1
+  type: bool
+our_test_attribute_2:
+  rpc: urn:attr:2
+  ldap: attr2
+  type: integer
+our_test_attribute_3:
+  rpc: urn:attr:3
+  ldap: attr3
+  type: string
+our_test_attribute_4:
+  rpc: urn:attr:4
+  ldap: attr4
+  type: map
+
