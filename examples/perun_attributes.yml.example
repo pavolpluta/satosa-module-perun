@@ -1,0 +1,20 @@
+---
+module: perun.micro_services.perun_attributes.PerunAttributes
+name: PerunAttributes
+config:
+  # Perun interface, which will be used
+  # Available: ldap/rpc
+  interface: rpc
+  # Path to Perun config file
+  perun_config_file_name: /etc/satosa/configuration/perun_configuration.yaml
+
+  # List of identifiers attributes, which will be used for searching the user
+  uids_identifiers:
+    - edupersonuniqueid
+    - displayname
+  mode: FULL
+  attr_map:
+    perunUserAttribute_einfra: einfra_login
+    perun_user_attribute-cn: [cn, full_name]
+    perunUserAttribute_groupNames: group_names
+    perun_user_attribute-admin_key: admin_key

@@ -40,9 +40,6 @@ class RpcConnector:
         params_query = urllib.parse.urlencode(params, doseq= True)
         params_query = re.sub(r'%5B\d+%5D', '%5B%5D', params_query)
 
-        logger.debug("RPC PARAMS QUERY")
-        logger.debug(pprint(params_query))
-
         uri = f'{self.rpc_url}json/{manager}/{method}'
 
         buffer = BytesIO()

@@ -243,7 +243,7 @@ class TestPerunEntitlement:
         mock_adapter.get_user_groups_on_facility.return_value = set()
         mock_adapter.get_resource_capabilities.return_value = set()
         mock_adapter.get_facility_capabilities.return_value = set()
-        mock_adapter.get_user_attributes_values.return_value = self.FORWARDED_ENTITLEMENTS_DICT
+        mock_adapter.get_user_attributes.return_value = self.FORWARDED_ENTITLEMENTS_DICT
 
         service = self.create_perun_entitlement_service()
         service.adapter = mock_adapter
@@ -265,7 +265,7 @@ class TestPerunEntitlement:
         mock_adapter.get_user_groups_on_facility.return_value = set()
         mock_adapter.get_resource_capabilities.return_value = set()
         mock_adapter.get_facility_capabilities.return_value = set()
-        mock_adapter.get_user_attributes_values.side_effect = Exception('Exception')
+        mock_adapter.get_user_attributes.side_effect = Exception('Exception')
 
         service = self.create_perun_entitlement_service()
         service.adapter = mock_adapter
@@ -285,7 +285,7 @@ class TestPerunEntitlement:
         mock_adapter.get_user_groups_on_facility.return_value = set()
         mock_adapter.get_resource_capabilities.return_value = set()
         mock_adapter.get_facility_capabilities.return_value = set()
-        mock_adapter.get_user_attributes_values.return_value = self.FORWARDED_ENTITLEMENTS_DICT
+        mock_adapter.get_user_attributes.return_value = self.FORWARDED_ENTITLEMENTS_DICT
 
         config = dict(
             interface='rpc',
@@ -311,7 +311,7 @@ class TestPerunEntitlement:
         mock_adapter.get_user_groups_on_facility.return_value = self.user_groups
         mock_adapter.get_resource_capabilities.return_value = {self.CAPABILITY1}
         mock_adapter.get_facility_capabilities.return_value = {self.CAPABILITY2}
-        mock_adapter.get_user_attributes_values.return_value = self.FORWARDED_ENTITLEMENTS_DICT
+        mock_adapter.get_user_attributes.return_value = self.FORWARDED_ENTITLEMENTS_DICT
         service = self.create_perun_entitlement_service()
         service.adapter = mock_adapter
         resp = InternalData(auth_info=AuthenticationInformation())

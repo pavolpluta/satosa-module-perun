@@ -2,7 +2,7 @@
 # USER ATTRIBUTES
 perunUserAttribute_einfra:
   rpc: urn:perun:user:attribute-def:def:login-namespace:einfra
-  ldap: einfra
+  ldap: login;x-ns-einfra
   type: bool
 perunUserAttribute_id:
   rpc: urn:perun:user:attribute-def:core:id
@@ -15,5 +15,5 @@ perunUserAttribute_lastName:
 perunUserAttribute_groupNames:
   rpc: urn:perun:user:attribute-def:virt:groupNames
   ldap: groupNames
-  type: map
+  type: list
 

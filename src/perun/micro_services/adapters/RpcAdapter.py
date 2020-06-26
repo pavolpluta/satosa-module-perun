@@ -17,11 +17,14 @@ class RpcAdapter(PerunAdapterAbstract):
     PERUN_RPC_HOSTNAME = 'rpc.hostname'
     PERUN_RPC_USER = 'rpc.user'
     PERUN_RPC_PASSWORD = 'rpc.password'
+    PERUN_ATTR_MAP_FILE = 'perun_attr_map_file'
+
 
     connector = None
 
     def __init__(self, config_file = None):
 
+        # TODO rework two lines below?
         if config_file is None:
             config_file = self.PERUN_CONFIG_FILE_NAME
 
@@ -30,6 +33,9 @@ class RpcAdapter(PerunAdapterAbstract):
             hostname = perun_configuration.get(self.PERUN_RPC_HOSTNAME, None)
             user = perun_configuration.get(self.PERUN_RPC_USER, None)
             pasword = perun_configuration.get(self.PERUN_RPC_PASSWORD, None)
+            self.attr_utils_file_name = perun_configuration.get(self.PERUN_ATTR_MAP_FILE)
+
+            self.attribute_utils = AttributeUtils(self.attr_utils_file_name)
 
         if None in [hostname, user, pasword]:
             raise Exception('One of required attributes is not defined!')
@@ -77,7 +83,7 @@ class RpcAdapter(PerunAdapterAbstract):
     # TODO test
     def get_user_attributes(self, user_id, attr_names):
 
-        attr_names_map = AttributeUtils.get_rpc_attr_names(attr_names)
+        attr_names_map = self.attribute_utils.get_rpc_attr_names(attr_names)
 
         logger.debug("RPC MAP:")
         logger.debug(pprint(attr_names_map))
@@ -90,9 +96,11 @@ class RpcAdapter(PerunAdapterAbstract):
         }
         )
 
+        logger.debug("RPC perun_attrs:")
+        logger.debug(pprint([perun_attrs]))
+
         return self.__get_attributes(perun_attrs,attr_names_map)
 
-    # TODO test
     def get_user_attributes_values(self,user_id, attributes):
         perun_attrs = self.get_user_attributes(user_id,attributes)
         attributes_values = {}
@@ -102,7 +110,6 @@ class RpcAdapter(PerunAdapterAbstract):
 
         return attributes_values
 
-    # TODO test
     def __get_attributes(self, perun_attrs,attr_names_map):
 
         attributes = {}

@@ -18,7 +18,6 @@ from perun.micro_services.adapters.PerunAdapterAbstract import PerunAdapterAbstr
 logger = logging.getLogger(__name__)
 
 
-# TODO test class
 class PerunAttributes(ResponseMicroService):
     INTERFACE = 'interface'
     UIDS_IDENTIFIERS = 'uids_identifiers'
@@ -43,7 +42,7 @@ class PerunAttributes(ResponseMicroService):
         interface = str.lower(config.get(self.INTERFACE))
         self.attr_map = config.get(self.ATTR_MAP)
         self.mode = config.get(self.MODE)
-        if self.mode not in [self.MODE_FULL, self.MODE_PARTIAL]:
+        if self.mode.upper() not in [self.MODE_FULL, self.MODE_PARTIAL]:
             self.mode = self.MODE_FULL
 
         self.adapter: PerunAdapterAbstract = PerunAdapterAbstract.get_instance(config_file_name, interface)
@@ -59,20 +58,38 @@ class PerunAttributes(ResponseMicroService):
             user_id = user_id[0]
 
         if user_id is None:
-            raise Exception(f'PerunAttributes: missing mandatory field "perun.user" in request.\n'
-                            f'Hint: Did you configured PerunIdentity filter before this filter?')
+            logger.debug(
+                f'PerunAttributes: missing mandatory field "perun.user" in request.\n'
+                f'Hint: Did you configured PerunIdentity filter before this filter?')
+            return super().process(context,data)
+
+        if self.attr_map is None:
+            logger.debug(
+                f'PerunAttributes: attribute map not defined in config file.'
+                f'PerunAttributes cannot be loaded.'
+            )
+            return super().process(context,data)
 
         attributes = []
         if self.mode == self.MODE_FULL:
             attributes = self.attr_map.keys()
         elif self.mode == self.MODE_PARTIAL:
-            for attr_name, attr_value in self.attr_map:
-                if attr_value in data.attributes.keys():
-                    attr = data.attributes.get(attr_value)
-                    if not attr:
-                        attributes.append(attr_name)
+            for attr_name, attr_value in self.attr_map.items():
+                if isinstance(attr_value, list):
+                    for val in attr_value:
+                        if val in data.attributes.keys():
+                            attr = data.attributes.get(val)
+                            if not attr:
+                                attributes.append(attr_name)
+                        else:
+                            attributes.append(attr_name)
                 else:
-                    attributes.append(attr_name)
+                    if attr_value in data.attributes.keys():
+                        attr = data.attributes.get(attr_value)
+                        if not attr:
+                            attributes.append(attr_name)
+                    else:
+                        attributes.append(attr_name)
 
         attrs = self.adapter.get_user_attributes_values(user_id, attributes)
 
@@ -84,6 +101,8 @@ class PerunAttributes(ResponseMicroService):
 
             if attr_value is None:
                 value = []
+
+            # Boolean also considered as instance of Number
             elif isinstance(attr_value, str) or isinstance(attr_value, Number):
                 value = [attr_value]
             elif self.__has_string_keys(attr_value):
@@ -98,14 +117,15 @@ class PerunAttributes(ResponseMicroService):
             if isinstance(ssp_attr, str):
                 attr_array = [ssp_attr]
             elif isinstance(ssp_attr, list):
-                attr_array = ssp_attr
+                attr_array = [attr for attr in ssp_attr if attr not in data.attributes.keys()]
+
             else:
                 raise Exception(f'sspmod_perun_Auth_Process_PerunAttributes - Unsupported attribute type.\n'
                                 f'Attribute: {attr_name}\n'
                                 f'Supported types: string, list')
 
             logger.debug(f'PerunAttributes: perun attribute "{attr_name}" was fetched.\n'
-                         f'Value: "{",".join(value)}" is being set to ssp attributes "{",".join(attr_array)}"')
+                         f'Value: "{",".join(str(x) for x in value)}" is being set to ssp attributes "{",".join(attr_array)}"')
 
             for attribute in attr_array:
                 data.attributes[attribute] = value

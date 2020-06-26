@@ -5,6 +5,7 @@ __author__ = "Pavel Vyskocil"
 __email__ = "Pavel.Vyskocil@cesnet.cz"
 
 import logging
+from pprint import pprint
 
 import yaml
 from perun.micro_services.adapters.LdapConnector import LdapConnector
@@ -19,11 +20,12 @@ logger = logging.getLogger(__name__)
 
 
 class LdapAdapter(PerunAdapterAbstract):
-
     PERUN_LDAP_HOSTNAMES = 'ldap.hostnames'
     PERUN_LDAP_BASE = 'ldap.base'
     PERUN_LDAP_USER = 'ldap.user'
     PERUN_LDAP_PASSWORD = 'ldap.password'
+
+    PERUN_ATTR_MAP_FILE = 'perun_attr_map_file'
 
     INTERNAL_ATTR_NAME = 'internalAttrName'
 
@@ -35,6 +37,9 @@ class LdapAdapter(PerunAdapterAbstract):
             user = perun_configuration.get(self.PERUN_LDAP_USER, None)
             pasword = perun_configuration.get(self.PERUN_LDAP_PASSWORD, None)
             self.base = perun_configuration.get(self.PERUN_LDAP_BASE, None)
+
+            self.attr_utils_file_name = perun_configuration.get(self.PERUN_ATTR_MAP_FILE)
+            self.attribute_utils = AttributeUtils(self.attr_utils_file_name)
 
         if None in [hostnames, user, pasword, self.base]:
             raise Exception('One of required attributes is not defined!')
@@ -81,12 +86,12 @@ class LdapAdapter(PerunAdapterAbstract):
         return Facility(response['perunFacilityId'][0], response['cn'][0], response['description'][0], identifier)
 
     def get_user_groups_on_facility(self, user_id, facility_id):
-        resources = self.connector.\
+        resources = self.connector. \
             search_for_entities(
-                self.base,
-                f'(&(objectClass=perunResource)(perunFacilityDn=perunFacilityId={facility_id}, {self.base}))',
-                ['perunResourceId']
-            )
+            self.base,
+            f'(&(objectClass=perunResource)(perunFacilityDn=perunFacilityId={facility_id}, {self.base}))',
+            ['perunResourceId']
+        )
 
         if resources is None:
             return []
@@ -97,12 +102,12 @@ class LdapAdapter(PerunAdapterAbstract):
 
         resources_string += ')'
 
-        groups_result = self.connector.\
+        groups_result = self.connector. \
             search_for_entities(
-                self.base,
-                '(&(uniqueMember=perunUserId=' + user_id + ', ou=People,' + self.base + ')' + resources_string + ')',
-                ['perunGroupId', 'cn', 'perunUniqueGroupName', 'perunVoId', 'description']
-            )
+            self.base,
+            '(&(uniqueMember=perunUserId=' + user_id + ', ou=People,' + self.base + ')' + resources_string + ')',
+            ['perunGroupId', 'cn', 'perunUniqueGroupName', 'perunVoId', 'description']
+        )
 
         if groups_result is None:
             groups_result = []
@@ -133,12 +138,12 @@ class LdapAdapter(PerunAdapterAbstract):
         if not groups or facility_id is None:
             return resource_capabilities
 
-        resources = self.connector.\
+        resources = self.connector. \
             search_for_entities(
-                self.base,
-                f'(&(objectClass=perunResource)(perunFacilityDn=perunFacilityId={facility_id},{self.base}))',
-                ['capabilities', 'assignedGroupId']
-            )
+            self.base,
+            f'(&(objectClass=perunResource)(perunFacilityDn=perunFacilityId={facility_id},{self.base}))',
+            ['capabilities', 'assignedGroupId']
+        )
 
         user_group_ids = []
         for group in groups:
@@ -185,9 +190,8 @@ class LdapAdapter(PerunAdapterAbstract):
 
         return ldap_response
 
-    # TODO test
-    def get_user_attributes_values(self,user_id, attributes):
-        attr_type_map = AttributeUtils.create_ldap_attr_name_type_map(attributes)
+    def get_user_attributes_values(self, user_id, attributes):
+        attr_type_map = self.attribute_utils.create_ldap_attr_name_type_map(attributes)
 
         perun_attrs = self.connector.search_for_entities(
             self.base,
@@ -197,8 +201,17 @@ class LdapAdapter(PerunAdapterAbstract):
 
         attributes_values = {}
 
+        logger.debug("LDAP - ATTR_TYPE_MAP:")
+        logger.debug(pprint(attr_type_map))
+
+        logger.debug("LDAP - PERUN_ATTRS[0]:")
+        logger.debug(pprint(perun_attrs[0]))
+
+        logger.debug("LDAP - attr_names:")
+        logger.debug(pprint(attr_type_map.keys()))
+
         for attr_name in attr_type_map.keys():
             attributes_values[attr_type_map[attr_name][self.INTERNAL_ATTR_NAME]] = \
-                AttributeUtils.set_attr_value(attr_type_map,perun_attrs[0], attr_name)
+                self.attribute_utils.set_internal_attr_value(attr_type_map, perun_attrs[0], attr_name)
 
         return attributes_values

@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import List
 import yaml
 import logging
@@ -8,7 +7,6 @@ logger = logging.getLogger(__name__)
 
 # TODO tests for relevant methods
 class AttributeUtils:
-    #CONFIG_FILE_NAME = Path('perun/config_templates/perun_attributes_map.yml')
     CONFIG_FILE_NAME = '/etc/satosa/configuration/perun_attributes_map.yaml'
     INTERNAL_ATTR_NAME = 'internalAttrName'
 
@@ -17,13 +15,15 @@ class AttributeUtils:
 
     TYPE = 'type'
     TYPE_BOOL = 'bool'
-    TYPE_MAP = 'map'
+    TYPE_LIST = 'list'
 
-    @staticmethod
-    def get_config():
+    def __init__(self, map_file_name):
+        self.perun_attributes_config = self.__get_config(map_file_name)
+
+    def __get_config(self, map_file_name):
         perun_attributes_config = None
 
-        with open(AttributeUtils.CONFIG_FILE_NAME, 'r') as stream:
+        with open(map_file_name, 'r') as stream:
             try:
                 perun_attributes_config = yaml.safe_load(stream)
             except yaml.YAMLError as ex:
@@ -34,13 +34,11 @@ class AttributeUtils:
 
         return perun_attributes_config
 
-    @staticmethod
-    def get_attr_name(internal_attr_name: str, interface: str):
-        perun_attributes_config = AttributeUtils.get_config()
+    def get_attr_name(self, internal_attr_name: str, interface: str):
         result_attr_name = None
 
         try:
-            attr_array = perun_attributes_config.get(internal_attr_name)
+            attr_array = self.perun_attributes_config.get(internal_attr_name)
 
             if interface in attr_array:
                 result_attr_name = attr_array[interface]
@@ -56,14 +54,12 @@ class AttributeUtils:
 
         return result_attr_name
 
-    @staticmethod
-    def create_attr_type_map(internal_attr_names: List[str], interface: str):
-        perun_attributes_config = AttributeUtils.get_config()
+    def create_attr_type_map(self, internal_attr_names: List[str], interface: str):
         result_map = {}
 
         for internal_attr_name in internal_attr_names:
             try:
-                attr_array = perun_attributes_config.get(internal_attr_name)
+                attr_array = self.perun_attributes_config.get(internal_attr_name)
 
                 if interface in attr_array:
                     result_map[attr_array[interface]] = {
@@ -79,14 +75,12 @@ class AttributeUtils:
 
         return result_map
 
-    @staticmethod
-    def get_attr_names(internal_attr_names: List[str], interface: str):
-        perun_attributes_config = AttributeUtils.get_config()
+    def get_attr_names(self, internal_attr_names: List[str], interface: str):
         result_map = {}
 
         for internal_attr_name in internal_attr_names:
             try:
-                attr_array = perun_attributes_config.get(internal_attr_name)
+                attr_array = self.perun_attributes_config.get(internal_attr_name)
 
                 if interface in attr_array:
                     result_map[attr_array[interface]] = internal_attr_name
@@ -101,39 +95,32 @@ class AttributeUtils:
 
         return result_map
 
-    @staticmethod
-    def get_ldap_attr_name(internal_attr_name: str):
-        return AttributeUtils.get_attr_name(internal_attr_name, AttributeUtils.LDAP)
+    def get_ldap_attr_name(self, internal_attr_name: str):
+        return self.get_attr_name(internal_attr_name, AttributeUtils.LDAP)
 
-    @staticmethod
-    def get_rpc_attr_name(internal_attr_name: str):
-        return AttributeUtils.get_attr_name(internal_attr_name, AttributeUtils.RPC)
+    def get_rpc_attr_name(self, internal_attr_name: str):
+        return self.get_attr_name(internal_attr_name, AttributeUtils.RPC)
 
-    @staticmethod
-    def create_ldap_attr_name_type_map(internal_attr_names: List[str]):
-        return AttributeUtils.create_attr_type_map(internal_attr_names, AttributeUtils.LDAP)
+    def create_ldap_attr_name_type_map(self, internal_attr_names: List[str]):
+        return self.create_attr_type_map(internal_attr_names, AttributeUtils.LDAP)
 
-    @staticmethod
-    def create_rpc_attr_name_type_map(internal_attr_names: List[str]):
-        return AttributeUtils.create_attr_type_map(internal_attr_names, AttributeUtils.RPC)
+    def create_rpc_attr_name_type_map(self, internal_attr_names: List[str]):
+        return self.create_attr_type_map(internal_attr_names, AttributeUtils.RPC)
 
-    @staticmethod
-    def get_ldap_attr_names(internal_attr_names: List[str]):
-        return AttributeUtils.get_attr_names(internal_attr_names, AttributeUtils.LDAP)
+    def get_ldap_attr_names(self, internal_attr_names: List[str]):
+        return self.get_attr_names(internal_attr_names, AttributeUtils.LDAP)
 
-    @staticmethod
-    def get_rpc_attr_names(internal_attr_names: List[str]):
-        return AttributeUtils.get_attr_names(internal_attr_names, AttributeUtils.RPC)
+    def get_rpc_attr_names(self, internal_attr_names: List[str]):
+        return self.get_attr_names(internal_attr_names, AttributeUtils.RPC)
 
-    @staticmethod
-    def set_attr_value(attrs_name_type_map, attrs_from_ldap, attr):
+    def set_internal_attr_value(self, attrs_name_type_map, attrs_from_ldap, attr):
         if (attr not in attrs_from_ldap) and (
                 attrs_name_type_map[attr][AttributeUtils.TYPE] == AttributeUtils.TYPE_BOOL):
             return False
         elif (attr not in attrs_from_ldap) and (
-                attrs_name_type_map[attr][AttributeUtils.TYPE] == AttributeUtils.TYPE_MAP):
-            return {}
-        elif (attr in attrs_from_ldap) and (attrs_name_type_map[attr][AttributeUtils.TYPE] == AttributeUtils.TYPE_MAP):
+                attrs_name_type_map[attr][AttributeUtils.TYPE] == AttributeUtils.TYPE_LIST):
+            return []
+        elif (attr in attrs_from_ldap) and (attrs_name_type_map[attr][AttributeUtils.TYPE] == AttributeUtils.TYPE_LIST):
             return attrs_from_ldap[attr]
         elif attr in attrs_from_ldap:
             return attrs_from_ldap[attr][0]

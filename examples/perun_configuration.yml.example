@@ -7,3 +7,5 @@ ldap.base: 'dc=perun,dc=cesnet,dc=cz'
 rpc.hostname: 'https://perun-dev.cesnet.cz/ba/rpc/'
 rpc.user: '
 rpc.password: ''
+
+perun_attr_map_file: '/perun/micro_services/configurations/perun_test_attributes_map.yaml'
